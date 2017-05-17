@@ -125,6 +125,30 @@
   init();
   animate();
 
+  function genPoints(nb_points) {
+    var x, y, val, d_min, d_max, rand;
+    var points = [];
+    for(i = 0; i < nb_points; i++) {
+      x = Math.random();
+      y = Math.random();
+      val = (1.0 - Math.abs(0.5 - x)) * 50.0 +  (1.0 - Math.abs(0.5 - y)) * 20.0;
+      d_min = val;
+      d_max = 100.0 - val;
+      rand = Math.random();
+      if (rand < 0.5) {
+        rand = 2 * rand;
+        val = val - rand * d_min * 0.3;
+      } else {
+        rand = 2 * (1.0 - rand);
+        val = val + rand * d_max * 0.3;
+      }
+
+      points.push(new THREE.Vector3(Math.random(), Math.random(), val))
+    }
+
+    return points;
+  }
+
   function init () {
     container = document.getElementById('container');
 
@@ -134,19 +158,17 @@
     scene = new THREE.Scene();
 
     var geometry = new THREE.PlaneBufferGeometry(2, 2);
+    var time = Date.now();
+    console.info('Generating points...');
+    var points_array = genPoints(1000);
+    console.info('...done in ', Date.now() - time, " ms.");
 
     uniforms = {
       u_time: {type: 'f', value: 1.0},
       u_resolution: {type: 'v2', value: new THREE.Vector2()},
       u_mouse: {type: 'v2', value: new THREE.Vector2()},
       u_points: {
-        type: 'v3v', value: [
-          new THREE.Vector3(0.2, 0.2, 1.0),
-          new THREE.Vector3(0.8, 0.8, 100.0),
-          new THREE.Vector3(0.1, 0.9, 50.0),
-          new THREE.Vector3(0.4, 0.6, 75.0),
-          new THREE.Vector3(0.9, 0.3, 35.0)
-        ]
+        type: 'v3v', value: points_array
       },
       u_colors: {
         type: 'v3v', value: [ new THREE.Color(0xf7fcfd), new THREE.Color(0x66c2a4), new THREE.Color(0x00441b)]
