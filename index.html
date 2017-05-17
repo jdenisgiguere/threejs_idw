@@ -21,6 +21,23 @@
         uniform float u_time;
         uniform int u_nb_points;
         uniform vec3 u_points [ NB_POINTS ];
+        uniform vec3 u_colors [ 3];
+
+        // The Book of Shaders by Patricio Gonzalez Vivo & Jen Lowe
+        vec3 rgb2hsb( in vec3 c ){
+            vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+            vec4 p = mix(vec4(c.bg, K.wz),
+                         vec4(c.gb, K.xy),
+                         step(c.b, c.g));
+            vec4 q = mix(vec4(p.xyw, c.r),
+                         vec4(c.r, p.yzx),
+                         step(p.x, c.r));
+            float d = q.x - min(q.w, q.y);
+            float e = 1.0e-10;
+            return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)),
+                        d / (q.x + e),
+                        q.x);
+        }
 
         float circle(in vec2 _st, in float _radius){
             vec2 dist = _st-vec2(0.5);
@@ -57,28 +74,43 @@
         }
 
         vec3 prop2color(in float _prop) {
-            float propMin = 0.0;
-            float propMax = 100.0;
-            float colorLevel = smoothstep(propMin, propMax, _prop);
 
-             return vec3(0.0, 0.0, colorLevel);
+             return vec3(0.0, 0.0, _prop);
+        }
+
+        vec3 three_color_gradient(in float _value, in vec3 _rgb_a, in vec3 _rgb_b, in vec3 _rgb_c) {
+           vec3 _hsb_a = rgb2hsb(_rgb_a);
+           vec3 _hsb_b = rgb2hsb(_rgb_b);
+           vec3 _hsb_c = rgb2hsb(_rgb_c);
+
+           if (_value < 0.5) {
+               return mix(_rgb_a, _rgb_b, 2.0 * _value );
+           } else {
+               return mix(_rgb_b, _rgb_c, 2.0 * (_value - 0.5));
+           }
         }
 
         void main() {
             vec2 st = gl_FragCoord.xy/u_resolution.xy;
-            /*
-            float pct = 0.0;
-            pct = distance(st, vec2(0.5));
-            vec3 color = vec3(pct);
-            */
+
+            float prop_min = 0.0;
+            float prop_max = 100.0;
 
             float prop = idw(st);
 
-            vec3 color = prop2color(prop);
+            vec3 color = prop2color(smoothstep(prop_min, prop_max, prop));
 
-            // vec3 color = vec3(circle(st,0.6));
+            /*
+            vec3 color_low = vec3(84.0 / 255.0, 48.0 / 255.0, 5.0 / 255.0);
+            vec3 color_med = vec3(245.0 / 255.0, 245.0 / 255.0, 245.0 / 255.0);
+            vec3 color_high = vec3(0.0 / 255.0, 60.0 / 255.0, 48.0 / 255.0);
+            */
 
-            gl_FragColor=vec4(prop2color(idw(st)),1.0);
+            color = three_color_gradient(smoothstep(prop_min, prop_max, prop), u_colors[0], u_colors[1], u_colors[2]);
+
+
+
+            gl_FragColor=vec4(color,1.0);
 
         }
 
@@ -111,8 +143,13 @@
         type: 'v3v', value: [
           new THREE.Vector3(0.2, 0.2, 1.0),
           new THREE.Vector3(0.8, 0.8, 100.0),
-          new THREE.Vector3(0.1, 0.9, 50.0)
+          new THREE.Vector3(0.1, 0.9, 50.0),
+          new THREE.Vector3(0.4, 0.6, 75.0),
+          new THREE.Vector3(0.9, 0.3, 35.0)
         ]
+      },
+      u_colors: {
+        type: 'v3v', value: [ new THREE.Color(0xf7fcfd), new THREE.Color(0x66c2a4), new THREE.Color(0x00441b)]
       }
     }
 
