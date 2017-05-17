@@ -131,16 +131,16 @@
     for(i = 0; i < nb_points; i++) {
       x = Math.random();
       y = Math.random();
-      val = (1.0 - Math.abs(0.5 - x)) * 50.0 +  (1.0 - Math.abs(0.5 - y)) * 20.0;
+      val = (1.0 - Math.abs(0.5 - x)) * 100.0 -  (1.0 - Math.abs(0.5 - y)) * 20.0;
       d_min = val;
       d_max = 100.0 - val;
       rand = Math.random();
       if (rand < 0.5) {
         rand = 2 * rand;
-        val = val - rand * d_min * 0.3;
+        val = val - rand * d_min * 0.1;
       } else {
         rand = 2 * (1.0 - rand);
-        val = val + rand * d_max * 0.3;
+        val = val + rand * d_max * 0.1;
       }
 
       points.push(new THREE.Vector3(Math.random(), Math.random(), val))
