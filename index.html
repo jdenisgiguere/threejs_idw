@@ -17,10 +17,66 @@
 <script id="fragmentShader" type="x-shader/x-fragment">
         uniform vec2 u_resolution;
         uniform float u_time;
+        uniform vec3 u_points [ 3 ];
+
+        float circle(in vec2 _st, in float _radius){
+            vec2 dist = _st-vec2(0.5);
+            return 1.-smoothstep(_radius-(_radius*0.01),
+                _radius+(_radius*0.01),
+                dot(dist,dist)*4.0);
+        }
+
+        float idw(in vec2 _st) {
+             vec2 loc = vec2(0.3,0.3);
+             vec2 loc2 = vec2(0.7, 0.7);
+             vec3 pts;
+
+             float prop = 0.0;
+             float dist = 0.0;
+
+             float weigthed_prop = 0.0;
+
+             float weigthed_prop_sum = 0.0;
+             float weigth_sum = 0.0;
+
+             for (int i = 0; i < 3; i++) {
+                 pts = u_points[i];
+                 loc = pts.xy;
+                 prop = pts[2];
+
+                 //prop = float(i) * 0.8 + 0.2;
+                 dist = distance(_st, loc);
+                 weigthed_prop_sum = weigthed_prop_sum + (prop / dist);
+                 weigth_sum = weigth_sum + (1.0 / dist);
+             }
+
+             return (weigthed_prop_sum / weigth_sum);
+        }
+
+        vec3 prop2color(in float _prop) {
+            float propMin = 0.0;
+            float propMax = 100.0;
+            float colorLevel = smoothstep(propMin, propMax, _prop);
+
+             return vec3(0.0, 0.0, colorLevel);
+        }
 
         void main() {
             vec2 st = gl_FragCoord.xy/u_resolution.xy;
-            gl_FragColor=vec4(st.x,st.y,0.0,1.0);
+            /*
+            float pct = 0.0;
+            pct = distance(st, vec2(0.5));
+            vec3 color = vec3(pct);
+            */
+
+            float prop = idw(st);
+
+            vec3 color = prop2color(prop);
+
+            // vec3 color = vec3(circle(st,0.6));
+
+            gl_FragColor=vec4(prop2color(idw(st)),1.0);
+
         }
 
 
@@ -48,10 +104,11 @@
       u_time: {type: 'f', value: 1.0},
       u_resolution: {type: 'v2', value: new THREE.Vector2()},
       u_mouse: {type: 'v2', value: new THREE.Vector2()},
-      u_pts: {
+      u_points: {
         type: 'v3v', value: [
-          new THREE.Vector3(0.1, 0.2, 10.0),
-          new THREE.Vector3(0.4, 0.5, 100.0)
+          new THREE.Vector3(0.2, 0.2, 1.0),
+          new THREE.Vector3(0.8, 0.8, 100.0),
+          new THREE.Vector3(0.1, 0.9, 50.0)
         ]
       }
     }
