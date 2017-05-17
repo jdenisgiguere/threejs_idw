@@ -1,0 +1,16 @@
+{
+  "name": "treejs_idw",
+  "version": "0.0.1",
+  "description": "WebGL Shaders IDW with threejs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node node_modules/browserify/bin/cmd.js index.js -o bundle.js"
+  },
+  "author": "Jean-Denis Giguère",
+  "license": "ISC",
+  "dependencies": {
+    "browserify": "^14.3.0",
+    "three": "^0.85.2"
+  }
+}
