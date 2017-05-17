@@ -15,9 +15,12 @@
 
 </script>
 <script id="fragmentShader" type="x-shader/x-fragment">
+
+        #define NB_POINTS {{nb_points}}
         uniform vec2 u_resolution;
         uniform float u_time;
-        uniform vec3 u_points [ 3 ];
+        uniform int u_nb_points;
+        uniform vec3 u_points [ NB_POINTS ];
 
         float circle(in vec2 _st, in float _radius){
             vec2 dist = _st-vec2(0.5);
@@ -39,7 +42,7 @@
              float weigthed_prop_sum = 0.0;
              float weigth_sum = 0.0;
 
-             for (int i = 0; i < 3; i++) {
+             for (int i = 0; i < NB_POINTS; i++) {
                  pts = u_points[i];
                  loc = pts.xy;
                  prop = pts[2];
@@ -113,10 +116,12 @@
       }
     }
 
+    var nb_points = uniforms.u_points.value.length;
+
     var material = new THREE.ShaderMaterial({
       uniforms: uniforms,
       vertexShader: document.getElementById('vertexShader').textContent,
-      fragmentShader: document.getElementById('fragmentShader').textContent
+      fragmentShader: S(document.getElementById('fragmentShader').textContent).template({nb_points: nb_points}).s
     });
 
     var mesh = new THREE.Mesh(geometry, material);
