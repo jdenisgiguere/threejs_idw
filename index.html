@@ -16,7 +16,6 @@
 </script>
 <script id="fragmentShader" type="x-shader/x-fragment">
 
-        #define NB_POINTS {{nb_points}}
         uniform vec2 u_resolution;
         uniform float u_time;
         uniform int u_nb_points;
@@ -178,9 +177,10 @@
     var nb_points = uniforms.u_points.value.length;
 
     var material = new THREE.ShaderMaterial({
+      defines: {NB_POINTS: nb_points},
       uniforms: uniforms,
       vertexShader: document.getElementById('vertexShader').textContent,
-      fragmentShader: S(document.getElementById('fragmentShader').textContent).template({nb_points: nb_points}).s
+      fragmentShader: document.getElementById('fragmentShader').textContent
     });
 
     var mesh = new THREE.Mesh(geometry, material);
