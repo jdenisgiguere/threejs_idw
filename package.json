@@ -1,5 +1,5 @@
 {
-  "name": "treejs_idw",
+  "name": "threejs_idw",
   "version": "0.0.1",
   "description": "WebGL Shaders IDW with threejs",
   "main": "index.js",
