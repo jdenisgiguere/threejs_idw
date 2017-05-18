@@ -8,6 +8,7 @@
 <div id="container"></div>
 
 <script id="vertexShader" type="x-shader/x-vertex">
+
         void main() {
             gl_Position = vec4( position, 1.0 );
         }
@@ -15,12 +16,10 @@
 
 </script>
 <script id="fragmentShader" type="x-shader/x-fragment">
-
         uniform vec2 u_resolution;
         uniform float u_time;
-        uniform int u_nb_points;
-        uniform vec3 u_points [ NB_POINTS ];
-        uniform vec3 u_colors [ 3];
+        uniform vec3 u_colors [3];
+        uniform sampler2D uTex;
 
         // The Book of Shaders by Patricio Gonzalez Vivo & Jen Lowe
         vec3 rgb2hsb( in vec3 c ){
@@ -38,13 +37,6 @@
                         q.x);
         }
 
-        float circle(in vec2 _st, in float _radius){
-            vec2 dist = _st-vec2(0.5);
-            return 1.-smoothstep(_radius-(_radius*0.01),
-                _radius+(_radius*0.01),
-                dot(dist,dist)*4.0);
-        }
-
         float idw(in vec2 _st) {
              vec2 loc = vec2(0.3,0.3);
              vec2 loc2 = vec2(0.7, 0.7);
@@ -59,11 +51,12 @@
              float weigth_sum = 0.0;
 
              for (int i = 0; i < NB_POINTS; i++) {
-                 pts = u_points[i];
-                 loc = pts.xy;
-                 prop = pts[2];
-
-                 //prop = float(i) * 0.8 + 0.2;
+                 float pix_size = 1.0 / float(NB_POINTS);
+                 vec4 item = texture2D(uTex,vec2((0.5 + float(i)) * pix_size,0));
+                 loc = vec2(item[0], item[1]);
+                 //loc = vec2(float(i) / float(NB_POINTS), 0.5);
+                 prop = float(i) / float(NB_POINTS);
+                 prop = item[2];
                  dist = distance(_st, loc);
                  weigthed_prop_sum = weigthed_prop_sum + (prop / dist);
                  weigth_sum = weigth_sum + (1.0 / dist);
@@ -93,19 +86,12 @@
             vec2 st = gl_FragCoord.xy/u_resolution.xy;
 
             float prop_min = 0.0;
-            float prop_max = 100.0;
+            float prop_max = 1.0;
 
             float prop = idw(st);
 
-            vec3 color = prop2color(smoothstep(prop_min, prop_max, prop));
 
-            /*
-            vec3 color_low = vec3(84.0 / 255.0, 48.0 / 255.0, 5.0 / 255.0);
-            vec3 color_med = vec3(245.0 / 255.0, 245.0 / 255.0, 245.0 / 255.0);
-            vec3 color_high = vec3(0.0 / 255.0, 60.0 / 255.0, 48.0 / 255.0);
-            */
-
-            color = three_color_gradient(smoothstep(prop_min, prop_max, prop), u_colors[0], u_colors[1], u_colors[2]);
+            vec3 color = three_color_gradient(smoothstep(prop_min, prop_max, prop), u_colors[0], u_colors[1], u_colors[2]);
 
 
 
@@ -124,60 +110,46 @@
   init();
   animate();
 
-  function genPoints(nb_points) {
-    var x, y, val, d_min, d_max, rand;
-    var points = [];
-    for(i = 0; i < nb_points; i++) {
-      x = Math.random();
-      y = Math.random();
-      val = (1.0 - Math.abs(0.5 - x)) * 100.0 -  (1.0 - Math.abs(0.5 - y)) * 20.0;
-      d_min = val;
-      d_max = 100.0 - val;
-      rand = Math.random();
-      if (rand < 0.5) {
-        rand = 2 * rand;
-        val = val - rand * d_min * 0.1;
-      } else {
-        rand = 2 * (1.0 - rand);
-        val = val + rand * d_max * 0.1;
-      }
-
-      points.push(new THREE.Vector3(Math.random(), Math.random(), val))
-    }
-
-    return points;
-  }
-
   function init () {
     container = document.getElementById('container');
 
+    var particles = 400;
+
     camera = new THREE.Camera();
     camera.position.z = 1;
+    var points = new Float32Array( particles * 3 );
+    for ( var i = 0, i3 = 0; i < particles; i ++, i3 += 3 ) {
+      points[ i3 + 0 ] = ( Math.random());
+      points[ i3 + 1 ] = ( Math.random());
+      points[ i3 + 2 ] = ( 1.0 * i / particles);
+    }
+
+    //console.log(points);
+
+
 
     scene = new THREE.Scene();
 
     var geometry = new THREE.PlaneBufferGeometry(2, 2);
-    var time = Date.now();
-    console.info('Generating points...');
-    var points_array = genPoints(1000);
-    console.info('...done in ', Date.now() - time, " ms.");
+
+    var texture = new THREE.DataTexture(points , particles, 1, THREE.RGBFormat, THREE.FloatType, THREE.UVMapping);
+    texture.needsUpdate = true;
 
     uniforms = {
       u_time: {type: 'f', value: 1.0},
       u_resolution: {type: 'v2', value: new THREE.Vector2()},
       u_mouse: {type: 'v2', value: new THREE.Vector2()},
-      u_points: {
-        type: 'v3v', value: points_array
-      },
       u_colors: {
         type: 'v3v', value: [ new THREE.Color(0xf7fcfd), new THREE.Color(0x66c2a4), new THREE.Color(0x00441b)]
-      }
+      },
+      uTex : { type: "t", value: texture } // regular texture
+
     }
 
-    var nb_points = uniforms.u_points.value.length;
-
     var material = new THREE.ShaderMaterial({
-      defines: {NB_POINTS: nb_points},
+      defines: {
+        NB_POINTS: particles
+      },
       uniforms: uniforms,
       vertexShader: document.getElementById('vertexShader').textContent,
       fragmentShader: document.getElementById('fragmentShader').textContent
