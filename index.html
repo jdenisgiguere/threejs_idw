@@ -184,7 +184,12 @@
   }
 
   function animate () {
-    requestAnimationFrame(animate);
+    setTimeout( function() {
+
+        requestAnimationFrame( animate );
+
+    }, 1000 / 1.0 );
+
     render();
   }
 
